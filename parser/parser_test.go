@@ -44,3 +44,47 @@ func testLetStatement(req *require.Assertions, s ast.Statement, name string) {
 	req.Equal(letStmt.Name.Value, name, "letStmt.Name.Value should be equal")
 	req.Equal(letStmt.Name.TokenLiteral(), name)
 }
+
+func TestReturnStatement(t *testing.T) {
+	input := `
+return 5;
+return 10;
+return 9999;
+`
+	l := lexer.New(input)
+	p := New(l)
+
+	prog := p.ParseProgram()
+	if prog == nil {
+		t.Fatal("nil program!")
+	}
+	checkErrors(t, p)
+
+	if len(prog.Statements) != 3 {
+		t.Fatalf("expected 3 statements got %v", len(prog.Statements))
+	}
+
+	for _, stmt := range prog.Statements {
+		returnStmt, ok := stmt.(*ast.ReturnStatement)
+		if !ok {
+			t.Errorf("expected stmt *ast.ReturnStatement, but got %T", stmt)
+			continue
+		}
+		if returnStmt.TokenLiteral() != "return" {
+			t.Errorf("expected returnStmt.TokenLiteral() = return but got %v", returnStmt.TokenLiteral())
+		}
+	}
+}
+
+func checkErrors(t *testing.T, p *Parser) {
+	t.Helper()
+	errs := p.Errors()
+	if len(errs) == 0 {
+		return
+	}
+	t.Errorf("Found %d errors!", len(errs))
+	for _, err := range errs {
+		t.Errorf("parse error: %s", err)
+	}
+	t.FailNow()
+}
