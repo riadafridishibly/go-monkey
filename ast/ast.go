@@ -29,18 +29,22 @@ func (p *Program) TokenLiteral() string {
 }
 
 type LetStatement struct {
-	Token token.Token
+	Token token.Token // token.LET
 	Name  *Identifier
 	Value Expression
 }
+
+var _ Statement = (*LetStatement)(nil)
 
 func (ls *LetStatement) statementNode()       {}
 func (ls *LetStatement) TokenLiteral() string { return ls.Token.Literal }
 
 type Identifier struct {
-	Token token.Token
+	Token token.Token // token.IDENT
 	Value string
 }
+
+var _ Expression = (*Identifier)(nil)
 
 func (ident *Identifier) expressionNode()      {}
 func (ident *Identifier) TokenLiteral() string { return ident.Token.Literal }
