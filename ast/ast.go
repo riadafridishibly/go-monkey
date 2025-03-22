@@ -138,3 +138,23 @@ func (e *ExpressionStatement) TokenLiteral() string {
 func (e *ExpressionStatement) statementNode() {}
 
 var _ Statement = (*ExpressionStatement)(nil)
+
+type InetegerLiteral struct {
+	Token token.Token
+	Value int64
+}
+
+// String implements Expression.
+func (i *InetegerLiteral) String() string {
+	return i.Token.Literal
+}
+
+// TokenLiteral implements Expression.
+func (i *InetegerLiteral) TokenLiteral() string {
+	return i.Token.Literal
+}
+
+// expressionNode implements Expression.
+func (i *InetegerLiteral) expressionNode() {}
+
+var _ Expression = (*InetegerLiteral)(nil)
