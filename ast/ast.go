@@ -184,3 +184,31 @@ func (p *PrefixExpression) TokenLiteral() string {
 func (p *PrefixExpression) expressionNode() {}
 
 var _ Expression = (*PrefixExpression)(nil)
+
+type InfixExpression struct {
+	Token    token.Token
+	Left     Expression
+	Operator string
+	Right    Expression
+}
+
+// String implements Expression.
+func (i *InfixExpression) String() string {
+	sb := strings.Builder{}
+	sb.WriteString("(")
+	sb.WriteString(i.Left.String())
+	sb.WriteString(" " + i.Operator + " ")
+	sb.WriteString(i.Right.String())
+	sb.WriteString(")")
+	return sb.String()
+}
+
+// TokenLiteral implements Expression.
+func (i *InfixExpression) TokenLiteral() string {
+	return i.Token.Literal
+}
+
+// expressionNode implements Expression.
+func (i *InfixExpression) expressionNode() {}
+
+var _ Expression = (*InfixExpression)(nil)
