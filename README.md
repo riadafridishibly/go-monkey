@@ -43,3 +43,9 @@ let addTwo = fn(x) {
 
 twice(addTwo, 2); // => 6
 ```
+
+
+### Future TODOs
+
+- [ ] Add better error handling (LINE, COLUMN)
+- [ ] Support UNICODE lexing

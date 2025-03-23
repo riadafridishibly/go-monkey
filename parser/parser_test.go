@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/riadafridishibly/go-monkey/ast"
@@ -58,7 +59,7 @@ return 9999;
 	if prog == nil {
 		t.Fatal("nil program!")
 	}
-	checkErrors(t, p)
+	checkParserErrors(t, p)
 
 	if len(prog.Statements) != 3 {
 		t.Fatalf("expected 3 statements got %v", len(prog.Statements))
@@ -83,7 +84,7 @@ func TestIdentifierExpression(t *testing.T) {
 	p := New(l)
 	prog := p.ParseProgram()
 
-	checkErrors(t, p)
+	checkParserErrors(t, p)
 	if len(prog.Statements) != 1 {
 		t.Fatalf("program has not enough statements. got=%d", len(prog.Statements))
 	}
@@ -107,7 +108,69 @@ func TestIdentifierExpression(t *testing.T) {
 	}
 }
 
-func checkErrors(t *testing.T, p *Parser) {
+func TestParsingPrefixExpression(t *testing.T) {
+	prefixTests := []struct {
+		input    string
+		operator string
+		intValue int64
+	}{
+		{"!5;", "!", 5},
+		{"-15", "-", 15},
+	}
+
+	for _, tt := range prefixTests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		prog := p.ParseProgram()
+		checkParserErrors(t, p)
+
+		if len(prog.Statements) != 1 {
+			t.Fatalf("prog.Statements does not contain %d statements. got=%d\n",
+				1, len(prog.Statements))
+		}
+
+		stmt, ok := prog.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf("prog.Statement[0] is not ast.ExpressionStatement. got=%T",
+				prog.Statements[0],
+			)
+		}
+
+		expr, ok := stmt.Expression.(*ast.PrefixExpression)
+		if !ok {
+			t.Fatalf("stmt is not ast.PrefixExpression. got=%T", stmt.Expression)
+		}
+
+		if expr.Operator != tt.operator {
+			t.Fatalf("expr.Operator is not %s. got %s", tt.operator, expr.Operator)
+		}
+
+		if !testIntegerLiteral(t, expr.Right, tt.intValue) {
+			return
+		}
+
+	}
+}
+
+func testIntegerLiteral(t *testing.T, il ast.Expression, value int64) bool {
+	t.Helper()
+	integer, ok := il.(*ast.InetegerLiteral)
+	if !ok {
+		t.Errorf("expected *ast.IntegerLiteral. got=%T", il)
+		return false
+	}
+	if integer.Value != value {
+		t.Errorf("expected Value %d. got=%d", value, integer.Value)
+		return false
+	}
+	if integer.TokenLiteral() != fmt.Sprintf("%d", value) {
+		t.Errorf("expected TokenLiteral %d, got %s", value, integer.TokenLiteral())
+		return false
+	}
+	return true
+}
+
+func checkParserErrors(t *testing.T, p *Parser) {
 	t.Helper()
 	errs := p.Errors()
 	if len(errs) == 0 {
