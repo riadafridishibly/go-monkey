@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/k0kubun/pp/v3"
 	"github.com/riadafridishibly/go-monkey/ast"
 	"github.com/riadafridishibly/go-monkey/lexer"
 	"github.com/stretchr/testify/require"
@@ -227,4 +228,87 @@ func checkParserErrors(t *testing.T, p *Parser) {
 		t.Errorf("parse error: %s", err)
 	}
 	t.FailNow()
+}
+
+func TestParseABC(t *testing.T) {
+	l := lexer.New("a + b * c")
+	p := New(l)
+	prog := p.ParseProgram()
+
+	pp.Default.SetColoringEnabled(false)
+	pp.Println(prog)
+}
+
+func TestOperatorPrecedenceParsing(t *testing.T) {
+	var testCases = []struct {
+		input    string
+		expected string
+	}{
+		{
+			input:    "-a * b",
+			expected: "((-a) * b)",
+		},
+		{
+			"!-a",
+			"(!(-a))",
+		},
+		{
+			"a + b + c",
+			"((a + b) + c)",
+		},
+		{
+			"a + b - c",
+			"((a + b) - c)",
+		},
+		{
+			"a * b * c",
+			"((a * b) * c)",
+		},
+		{
+			"a * b / c",
+			"((a * b) / c)",
+		},
+		{
+			"a + b / c",
+			"(a + (b / c))",
+		},
+		{
+			"a + b * c + d / e - f",
+			"(((a + (b * c)) + (d / e)) - f)",
+		},
+		{
+			"3 + 4; -5 * 5",
+			"(3 + 4)((-5) * 5)",
+		},
+		{
+			"5 > 4 == 3 < 4",
+			"((5 > 4) == (3 < 4))",
+		},
+		{
+			"5 < 4 != 3 > 4",
+			"((5 < 4) != (3 > 4))",
+		},
+		{
+			"3 + 4 * 5 == 3 * 1 + 4 * 5",
+			"((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))",
+		},
+		{
+			"3 + 4 * 5 == 3 * 1 + 4 * 5",
+			"((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))",
+		},
+	}
+
+	for _, tc := range testCases {
+		l := lexer.New(tc.input)
+		p := New(l)
+		prog := p.ParseProgram()
+		checkParserErrors(t, p)
+
+		// This string method will wrap things in parenthesis
+		actual := prog.String()
+
+		if actual != tc.expected {
+			t.Errorf("failed! expected = %q but got = %q", tc.expected, actual)
+		}
+	}
 }
